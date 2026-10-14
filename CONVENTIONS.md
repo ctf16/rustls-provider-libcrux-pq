@@ -42,7 +42,7 @@ done
   `#[cfg(test)]`. `lib.rs` holds the crate documentation (algorithm summary and a usage
   example), `provider()` and the `SecureRandom`.
 - `Cargo.toml`, fields in this order: `name`, `version`, `authors`, `edition = "2021"`,
-  `rust-version = "1.89"`, `repository`, `description`, `license = "MIT OR Apache-2.0"`,
+  `rust-version` (below), `repository`, `description`, `license = "MIT OR Apache-2.0"`,
   `readme`, `keywords` (at most 5, including `rustls`, `tls`, `post-quantum`), `categories =
   ["cryptography", "network-programming"]`, and this `include` list:
 
@@ -50,6 +50,10 @@ done
   include = ["/src", "/testdata/make.sh", "/README.md", "/LICENSE-MIT", "/LICENSE-APACHE"]
   ```
 
+- `rust-version`: the lowest Rust release that builds the crate and its dependencies on every
+  platform CI uses, x86_64 included: the `msrv` job runs on x86_64 Linux, where backends
+  compile code that an Apple-silicon check never sees. The README's Minimum supported Rust
+  version section says which dependency sets it.
 - Dependencies: `rustls = { version = "0.23.45", default-features = false, features = ["std",
   "tls12"] }`. aws-lc-rs only as the test reference, through the dev-dependency `rustls = {
   version = "0.23.45", default-features = false, features = ["std", "tls12", "aws-lc-rs"] }`.
