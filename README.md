@@ -150,7 +150,9 @@ OPENSSL=/opt/homebrew/opt/openssl@3/bin/openssl cargo test --release
 
 ## Minimum supported Rust version
 
-1.89, set by `libcrux-p384` and the rustls provider crate conventions.
+1.94, set by `libcrux-platform` 0.0.4 (which every libcrux crate pins): on x86_64 it calls
+`__cpuid` outside an `unsafe` block, which older releases refuse. Elsewhere 1.89 would do,
+the floor `libcrux-p384` sets.
 
 ## License
 
