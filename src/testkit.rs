@@ -949,7 +949,11 @@ pub fn resumption(p: &CryptoProvider) -> usize {
     let mut count = 0;
     for (pair, cp, sp) in pairs(p, &reference) {
         for version in [&TLS13, &TLS12] {
-            for kt in ["p256", "rsa2048"] {
+            // (the certificate types both ends handle)
+            for kt in ["p256", "rsa2048"]
+                .into_iter()
+                .filter(|kt| key_types(cp).contains(kt) && key_types(sp).contains(kt))
+            {
                 let server = server_config(Arc::new(sp.clone()), version, kt);
                 for suite in common_suites(cp, sp, version, kt) {
                     let what = format!("{pair} {} {kt} {:?}", version_name(version), suite.suite());
@@ -1017,7 +1021,11 @@ pub fn tampered_records_refused(p: &CryptoProvider) -> usize {
     let mut refused = 0;
     for (pair, cp, sp) in [("aws-lc-rs -> P", &reference, p), ("P -> P", p, p)] {
         for version in [&TLS13, &TLS12] {
-            for kt in ["p256", "rsa2048"] {
+            // (the certificate types both ends handle)
+            for kt in ["p256", "rsa2048"]
+                .into_iter()
+                .filter(|kt| key_types(cp).contains(kt) && key_types(sp).contains(kt))
+            {
                 let server = server_config(Arc::new(sp.clone()), version, kt);
                 for suite in common_suites(cp, sp, version, kt) {
                     if version.version == TLS13.version && kt == "rsa2048" {
