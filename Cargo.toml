@@ -1,0 +1,42 @@
+[package]
+name = "rustls-provider-libcrux-pq"
+version = "0.1.0"
+authors = ["Calvin Forinash <forinash@proton.me>"]
+edition = "2021"
+rust-version = "1.89"
+repository = "https://github.com/ctf16/rustls-provider-libcrux-pq"
+description = "A rustls crypto provider on the libcrux crates, with post-quantum ML-KEM (FIPS 203) key exchange and ML-DSA (FIPS 204) signatures"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+keywords = ["rustls", "tls", "post-quantum", "ml-kem", "ml-dsa"]
+categories = ["cryptography", "network-programming"]
+include = ["/src", "/testdata/make.sh", "/README.md", "/LICENSE-MIT", "/LICENSE-APACHE"]
+
+# libcrux, one release line (libcrux-traits 0.0.9, libcrux-secrets 0.0.7).
+# Every libcrux crate is 0.0.x, which Cargo treats as incompatible with the
+# next release, so each of these is pinned in effect. libcrux-aes, not the
+# older libcrux-aesgcm, provides AES-GCM on this line. pkcs8, sec1 and der only
+# parse key files.
+[dependencies]
+rustls = { version = "0.23.45", default-features = false, features = ["std", "tls12"] }
+libcrux-aes = "0.0.10"
+libcrux-chacha20poly1305 = "0.0.10"
+libcrux-traits = "0.0.9"
+libcrux-sha2 = "0.0.9"
+libcrux-hmac = "0.0.9"
+libcrux-curve25519 = "0.0.9"
+libcrux-p256 = { version = "0.0.9", features = ["expose-hacl"] }
+libcrux-p384 = "0.0.1"
+libcrux-ecdsa = "0.0.9"
+libcrux-ed25519 = "0.0.10"
+libcrux-rsa = "0.0.9"
+libcrux-ml-kem = { version = "0.0.11", default-features = false, features = ["mlkem512", "mlkem768", "mlkem1024"] }
+libcrux-ml-dsa = "0.0.11"
+pkcs8 = "0.11.0"
+sec1 = { version = "0.8.1", default-features = false, features = ["der"] }
+der = "0.8.2"
+getrandom = { version = "0.4.3", features = ["sys_rng"] }
+
+# the tests check the provider against rustls's aws-lc-rs provider
+[dev-dependencies]
+rustls = { version = "0.23.45", default-features = false, features = ["std", "tls12", "aws-lc-rs"] }
