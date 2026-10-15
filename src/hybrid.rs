@@ -100,6 +100,20 @@ impl ActiveKeyExchange for Active {
         ))
     }
 
+    /// the elliptic-curve part: rustls offers it as a key share of its own
+    /// too when the client has the classical group, so a server with only
+    /// that group needs no HelloRetryRequest
+    fn hybrid_component(&self) -> Option<(NamedGroup, &[u8])> {
+        Some((self.classical.group(), self.classical.pub_key()))
+    }
+
+    fn complete_hybrid_component(
+        self: Box<Self>,
+        peer_pub_key: &[u8],
+    ) -> Result<SharedSecret, Error> {
+        self.classical.complete(peer_pub_key)
+    }
+
     fn pub_key(&self) -> &[u8] {
         &self.pub_key
     }

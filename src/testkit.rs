@@ -2,8 +2,9 @@
 //! provider as the reference: key exchange in both roles, malformed key
 //! shares, signatures both ways, hashes, HKDF and the TLS 1.2 PRF, and
 //! handshakes in memory (every suite, group and certificate type in common,
-//! mutual TLS), HelloRetryRequest, resumption, key updates, tampered records
-//! and random inputs. Keys and certificates: testdata/ (make.sh).
+//! mutual TLS), HelloRetryRequest, a hybrid's classical share offered on its
+//! own, resumption, key updates, tampered records and random inputs. Keys
+//! and certificates: testdata/ (make.sh).
 //!
 //! Each check returns what it covered, for the caller to compare with what
 //! the provider should have, so a check can't pass by testing nothing.
@@ -939,6 +940,59 @@ pub fn hello_retry_matrix(p: &CryptoProvider) -> usize {
         }
     }
     count
+}
+
+/// for every hybrid group of P whose elliptic-curve group P also has: a P
+/// client offering the hybrid, then that classical group, reaches a server
+/// with only the classical group (P's and aws-lc-rs's) without a
+/// HelloRetryRequest, since it sends the classical share too. Returns the
+/// hybrids checked.
+pub fn hybrids_share_classical_component(p: &CryptoProvider) -> Vec<NamedGroup> {
+    let reference = reference();
+    let mut rng = Prng(0x6863);
+    let mut checked = Vec::new();
+    for &g in &p.kx_groups {
+        let Some(cg) = g
+            .start()
+            .unwrap()
+            .hybrid_component()
+            .and_then(|(n, _)| group(p, n))
+        else {
+            continue;
+        };
+        for (pair, sp) in [("P -> P", p), ("P -> aws-lc-rs", &reference)] {
+            let what = format!(
+                "{pair} {:?} + {:?} -> {:?} only",
+                g.name(),
+                cg.name(),
+                cg.name()
+            );
+            let suite = common_suites(p, sp, &TLS13, "p256")[0];
+            let client = client_config(with(p, vec![suite], vec![g, cg]), &TLS13, "p256");
+            let server = server_config(
+                with(
+                    sp,
+                    sp.cipher_suites.clone(),
+                    vec![group(sp, cg.name()).unwrap()],
+                ),
+                &TLS13,
+                "p256",
+            );
+            let (mut c, mut s) =
+                connect(&client, &server).unwrap_or_else(|e| panic!("{what}: {e}"));
+            for conn in [&c, &s] {
+                assert_eq!(conn.handshake_kind(), Some(HandshakeKind::Full), "{what}");
+                assert_eq!(
+                    conn.negotiated_key_exchange_group().map(|g| g.name()),
+                    Some(cg.name()),
+                    "{what}"
+                );
+            }
+            check_connection(&mut c, &mut s, 100, &mut rng);
+        }
+        checked.push(g.name());
+    }
+    checked
 }
 
 /// a second connection resumes the first one's session (TLS 1.3 tickets and

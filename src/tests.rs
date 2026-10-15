@@ -135,6 +135,15 @@ fn hello_retry_requests() {
 }
 
 #[test]
+fn hybrids_offer_their_classical_share_too() {
+    use NamedGroup::*;
+    assert_eq!(
+        hybrids_share_classical_component(&ours()),
+        [X25519MLKEM768, secp256r1MLKEM768, Unknown(0x11ed)]
+    );
+}
+
+#[test]
 fn sessions_resume() {
     // per pair: TLS 1.3 and 1.2, each 3 suites with ECDSA
     assert_eq!(resumption(&ours()), 3 * 2 * 3);
