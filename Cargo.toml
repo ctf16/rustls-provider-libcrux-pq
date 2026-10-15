@@ -1,6 +1,6 @@
 [package]
 name = "rustls-provider-libcrux-pq"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Calvin Forinash <forinash@proton.me>"]
 edition = "2021"
 rust-version = "1.94"
